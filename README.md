@@ -1,6 +1,6 @@
 <div dir=rtl align=right>
 
-# تۆڕی دەماری (`Neural Network`) ێکی ساکار
+# تۆڕێکی دەماریی (`Neural Network`) ساکار
 
 کۆدەکانی فایلی `neural-network.js` وەرگێڕانێکە لە زمانی `Python` ڕا لە
 ئەم سەرچاوەیە:
