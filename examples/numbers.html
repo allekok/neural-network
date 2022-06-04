@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html dir="rtl" lang="ckb">
+	<head>
+		<title>
+			ژمارەکان
+		</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width">
+		<style>
+		 canvas {
+			 background: white;
+			 margin: .1rem;
+			 padding: .5rem;
+			 border: 3px solid;
+			 border-radius: 50%;
+			 transition: all .5s ease;
+		 }
+		 .correct {
+			 border-color: #0F0;
+		 }
+		 .wrong {
+			 border-color: red;
+		 }
+		 #numbers {
+			 text-align: center;
+		 }
+		 #res {
+			 direction: ltr;
+			 font-family: mono;
+			 font-size: .8rem;
+		 }
+		 @media (prefers-color-scheme: dark) {
+			 body {
+				 background: black;
+				 color: white;
+			 }
+			 canvas {
+				 background: #DDD;
+			 }
+		 }
+		</style>
+	</head>
+	<body>
+		<div id="numbers"></div>
+		<div id="res"></div>
+	</body>
+	<script src="../neural-network.js"></script>
+	<script>
+	 /* Global */
+	 const numbers_el = document.getElementById('numbers')
+	 const res_el = document.getElementById('res')
+	 const fonts = ['14px Arial',
+			'14px Tahoma',
+			'14px monospace',
+			'14px sans',
+			'14px sans-serif',
+			'14px serif']
+	 let data = [], canvases = []
+
+	 /* Draw */
+	 for(let i = 0; i < 10; i++) {
+		 const div = document.createElement('DIV')
+		 div.id = `number-${i}`
+		 numbers_el.appendChild(div)
+		 for(const font of fonts) {
+			 const canvas = document.createElement('CANVAS')
+			 canvas.width = '10'
+			 canvas.height = '10'
+			 canvas.dataset.id = `${font}-${i}`
+
+			 const ctx = canvas.getContext('2d')
+			 ctx.font = font
+			 ctx.fillText(String(i), 0, 10)
+
+			 div.appendChild(canvas)
+
+			 const image = pixelize(ctx.getImageData(
+				 0, 0, canvas.width, canvas.height).data)
+			 image.push(i)
+
+			 data.push(image)
+			 canvases.push(canvas)
+		 }
+	 }
+
+	 /* Neural Network */
+	 setTimeout(() => {
+		 const indexes = random_list(0, data.length)
+		 data = shuffle(data, indexes)
+		 canvases = shuffle(canvases, indexes)
+
+		 const print = {log: s => res_el.innerHTML += `<p>${s}</p>`}
+		 const n = new NeuralNetwork(data[0].length - 1, print)
+		 n.add_layer(20, 'relu').add_layer(10, 'none')
+		 n.train(data, .1, 50)
+
+		 for(const i in data) {
+			 const real = data[i][data[i].length - 1]
+			 const predicted = n.predict(data[i])
+			 const res = real == predicted
+			 canvases[i].classList.add(res ? 'correct' : 'wrong')
+		 }
+	 }, 0)
+
+	 /* Functions */
+	 function pixelize(img) {
+		 const A = []
+		 for(let i = 3; i < img.length; i += 4) {
+			 const a = img[i]
+			 A.push(normalize(a))
+		 }
+		 return A
+	 }
+	 function normalize(item) {
+		 return item / 255
+	 }
+	 function shuffle(list, indexes) {
+		 const new_list = []
+		 for(const i of indexes)
+			 new_list.push(list[i])
+		 return new_list
+	 }
+	 function random_list(min, max) {
+		 const list = []
+		 const length = max - min
+		 while(list.length != length) {
+			 const rnd = Math.floor(Math.random() * length) + min
+			 if(list.indexOf(rnd) == -1)
+				 list.push(rnd)
+		 }
+		 return list
+	 }
+	</script>
+</html>
